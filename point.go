@@ -2,7 +2,6 @@ package point
 
 import (
 	"fmt"
-	"log"
 	"math"
 )
 
@@ -36,24 +35,53 @@ func Bulge2Arc(startP, endP *Point, bulge float64) []*Point {
 	r := pointDistance(startP, O)
 	startDegree := math.Atan2(startP.Y-O.Y, startP.X-O.X) * 180 / math.Pi
 	endDegree := math.Atan2(endP.Y-O.Y, endP.X-O.X) * 180 / math.Pi
-	log.Println("X:", O.X)
-	log.Println("Y:", O.Y)
-	log.Println("r:", r)
-	log.Println("startDegree:", startDegree)
-	log.Println("endDegree:", endDegree)
-	log.Println("arc:", endDegree-startDegree)
-	return NewArc(O.X, O.Y, r, startDegree, endDegree)
+
+	// for endDegree < 0 {
+	// 	endDegree += 360
+	// }
+	// for startDegree < 0 {
+	// 	startDegree += 360
+	// }
+
+	// log.Println("X:", O.X)
+	// log.Println("Y:", O.Y)
+	// log.Println("r:", r)
+	// log.Println("bulge:", bulge)
+
+	// log.Println("startDegree:", startDegree)
+	// log.Println("endDegree:", endDegree)
+	// log.Println("arc:", endDegree-startDegree)
+
+	if bulge > 0 {
+		for endDegree <= startDegree {
+			endDegree += 360
+		}
+		return NewArc(O.X, O.Y, r, startDegree, endDegree)
+	} else {
+
+		for startDegree <= endDegree {
+			startDegree += 360
+		}
+
+		poly := NewArc(O.X, O.Y, r, endDegree, startDegree)
+		reverse(poly)
+		return poly
+	}
+
 }
 func NewArc(x, y float64, r float64, startDegree, endDegree float64) []*Point {
+	if endDegree <= startDegree {
+		panic("")
+	}
 	poly := []*Point{}
 	var num = int(math.Ceil((2 * math.Pi) / math.Acos(1-(2/r))))
 	num = int(float64(num)*(endDegree-startDegree)/360 + 1)
-	if num < 3 {
-		num = 3
+	if num < 10 {
+		num = 10
 	}
 	alltheta := (endDegree - startDegree) / 360 * (2 * math.Pi)
 	starttheta := startDegree / 360 * (2 * math.Pi)
-	for i := 0; i < num; i++ {
+	for i := 0; i <= num; i++ {
 		theta := float64(i)*(alltheta/float64(num)) + starttheta
 		point := &Point{
 			X: r*math.Cos(theta) + x,
@@ -63,11 +91,16 @@ func NewArc(x, y float64, r float64, startDegree, endDegree float64) []*Point {
 	}
 	return poly
 }
+func reverse(s []*Point) {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+}
 func NewCircle(x, y float64, r float64) []*Point {
 	poly := []*Point{}
 	var num = int(math.Ceil((2 * math.Pi) / math.Acos(1-(2/r))))
-	if num < 3 {
-		num = 3
+	if num < 30 {
+		num = 30
 	}
 	for i := 0; i < num; i++ {
 		theta := float64(i) * ((2 * math.Pi) / float64(num))
